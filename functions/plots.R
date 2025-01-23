@@ -31,7 +31,7 @@ palettes <- list(NatComms= paletteer_d("ggsci::nrc_npg", n=10),
                  hm_corr_blue = colorRampPalette(c("white", "#CAE5EF", "#96CED4", "#48BDBC", "#0096A0"))(n=100),
                  
                  #Binary codings
-                 plaus_24hr=c("forestgreen", "grey38"), has_24hr=c("forestgreen", "grey38"),
+                 plaus_24hr=c("forestgreen", "grey38"), has_24hr=c("forestgreen", "grey38")
 )
 
 
