@@ -16,8 +16,8 @@ add_descr_labels <- function(data, base_var, labs_vals, ordered = T) {
   base <- data %>% select(all_of(base_var)) 
   x <- rep(NA, length(base))
   for(i in 1:length(labs_vals)) {
-    x[base == labs_vals[[i]] ] <- names(labs_vals)[i]
-  } if(ordered == T) {
+    x[base == labs_vals[i] ] <- names(labs_vals)[i]
+  } ; if(ordered == T) {
     x <- factor(x, levels=names(labs_vals)) 
   } ; return(x)
 }
