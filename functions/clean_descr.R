@@ -116,6 +116,15 @@ median_25to75 <- function(x, d=2) {
 }
 
 
+# ======================================
+## Print range 
+# ======================================
+range_formatted <-function(x, d=2) {
+  sprintf("(%s, %s)", round(min(x, na.rm=T), digits = d), 
+          round(max(x, na.rm=T), digits = d))
+}
+
+
 # ======================================================
 ## Print P-values as rounded or scientific (if <0.01)
 # ======================================================

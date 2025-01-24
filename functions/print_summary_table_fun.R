@@ -40,7 +40,7 @@ print_summary_table <- function(
   # ===========================
   # Format P-value function
   # ===========================
-  format_p.fun <- function(p, digits) {
+  format_p <- function(p, digits) {
     P<-ifelse(as.numeric(p) <0.01, format(as.numeric(p), scientific = T, digits=2), 
               round(as.numeric(p), digits))
     return(P)
@@ -69,14 +69,23 @@ print_summary_table <- function(
     mutate(random_strata = sample(c(0,1), size=nrow(.), replace=T)) ; 
   var_strata = "random_strata" ; var_strata_order=c(0,1) } else if(var_strata != F) {
     var_strata_order = if(var_strata_order[1] == F) {
-    c(na.omit(unique(data[, ..var_strata][[1]]))) } else{ var_strata_order }
+    c(na.omit(unique(data[[var_strata]]))) } else{ var_strata_order }
   }
   
-  #Make dataframe with strata_var (no missing; ordered by var_strata_order) & vars_to_summarise
-  dat_total <- data %>% 
-    dplyr::select(strata=all_of(var_strata), all_of(names(vars_to_summarize)), all_of(p_adjust_vars)) %>%
-    mutate(strata_ordered = factor(strata, levels=var_strata_order)) %>%
-    filter(complete.cases(strata_ordered))
+  #Make dataframe with strata_var (no missing; ordered by var_strata_order) & vars_to_summarise & p-adjust vars
+  #If P-values should be adjusted {
+  if(p_adjust != "none") {
+    dat_total <- data %>% 
+      select(strata=all_of(var_strata), all_of(names(vars_to_summarize)),
+      all_of(p_adjust_vars)) %>%
+      mutate(strata_ordered = factor(strata, levels=var_strata_order)) %>%
+      filter(complete.cases(strata_ordered))
+    } else {
+      dat_total <- data %>% 
+        select(strata=all_of(var_strata), all_of(names(vars_to_summarize))) %>%
+        mutate(strata_ordered = factor(strata, levels=var_strata_order)) %>%
+        filter(complete.cases(strata_ordered))
+    }
   
   #If P-trend should also be printed ... make a continuous strata exposure
   if("trend" %in% p_types) {
@@ -110,9 +119,10 @@ print_summary_table <- function(
     
     ## Make temporary vars for name, data, and Label
     var = names(vars_to_summarize)[v]
-    var.total.dat = dat_total %>% dplyr::select(strata_ordered, Var=all_of(var), all_of(p_adjust_vars)) %>%
+    if(p_adjust != "none") {vars_to_select <- c(var, p_adjust_vars)} else {vars_to_select <- var}
+    
+    var.total.dat = dat_total %>% dplyr::select(strata_ordered, Var=all_of(vars_to_select)) %>%
       filter(complete.cases(Var))
-      #mutate(var_na=recode_na_as.fun(Var) ) %>% filter(var_na == 1)
     var.grouped.dat = dat_grouped %>% dplyr::select(strata_ordered, Var=all_of(var)) %>%
       filter(complete.cases(Var))
     var.Label=paste0(vars_to_summarize[v][[1]])
@@ -135,26 +145,31 @@ print_summary_table <- function(
       ## Add P-values using ANOVA (for ≥3-level strata)
       if(p_print == T) {
         p_to_print <- list()
-        if(var %in% p_adjust_vars) {
-          if("descriptive" %in% p_types) {
-            P_Ftest=format_p.fun(anova(lm(formula(paste0(var, "~strata_ordered", "+", paste0(p_adjust_vars[-which(p_adjust_vars==var)], collapse = "+"))), data=dat_total))$'Pr(>F)'[1], d_pval) }
-          if("trend" %in% p_types) {
-            P_trend=format_p.fun(summary(lm(formula(paste0(var, "~strata_ordered.cont", "+", paste0(p_adjust_vars[-which(p_adjust_vars==var)], collapse = "+"))), data=dat_total))$coef[2,4], d_pval) }
-        } else {
-          if("descriptive" %in% p_types) {
-            P_Ftest=format_p.fun(anova(lm(formula(paste0(var, "~strata_ordered", "+", paste0(p_adjust_vars, collapse = "+"))), data=dat_total))$'Pr(>F)'[1], d_pval) }
-          if("trend" %in% p_types) {
-            P_trend=format_p.fun(summary(lm(formula(paste0(var, "~strata_ordered.cont", "+", paste0(p_adjust_vars, collapse = "+"))), data=dat_total))$coef[2,4], d_pval) }
-        } 
+        
+        # Set p-value formula
+        if(p_adjust == "none") { # for UNADJUSTED p-values
+          P_formula <- paste0(var, "~strata_ordered") ; Ptrend_formula <- paste0(var, "~strata_ordere.cont") } else 
+            if(p_adjust != "none") {
+              P_formula <- paste0(var, "~strata_ordered", "+", gsub(var, "", paste0(p_adjust_vars, collapse = "+")))
+              Ptrend_formula <- paste0(var, "~strata_ordered.cont", "+", gsub(var, "", paste0(p_adjust_vars, collapse = "+")))
+        }
+        
+        # Calculate P-values
+        if(nlevels(dat_total$strata_ordered) == 2 & p_adjust == "none") {
+          P_test <- format_p(t.test(as.formula(P_formula), data=dat_total)$p.value, d_pval)
+          P_trend = NA } else {
+            P_Ftest = format_p(anova(lm(formula(Pf_formula), data=dat_total))$'Pr(>F)'[1], d_pval)
+            P_trend = format_p(summary(lm(formula(Pf_formula), data=dat_total))$coef[2,4], d_pval)
+          }
         
         # Select which P-values to print
         if("descriptive" %in% p_types & "trend" %in% p_types) {
-          p_to_print <- c("P_value"=P_Ftest, "P_trend"=P_trend)
-          } else if(p_types == "descriptive") {p_to_print <- c("P_value"=as.character(P_Ftest))} else if(p_types == "trend") {p_to_print <- c("P_trend"=as.character(P_trend)) }
+          p_to_print <- c("P_value"=P_test, "P_trend"=P_trend)
+          } else if(p_types == "descriptive") {p_to_print <- c("P_value"=as.character(P_test))} else if(p_types == "trend") {p_to_print <- c("P_trend"=as.character(P_trend)) }
         
         var.summary <- cbind.data.frame(var.summary, t(as.data.frame(p_to_print))) %>% mutate(across(starts_with("P_"), ~as.character(.)))
       } else {var.summary <- var.summary}
-      
+    
     }
     
     # ==============================
@@ -184,7 +199,7 @@ print_summary_table <- function(
       ## Add P-values
       if(p_print == T) {
         p_to_print <- list()
-        P_ChiSq=format_p.fun(chisq.test(dat_total[, ..var][[1]], dat_total$strata_ordered)$p.value, d_pval)
+        P_ChiSq=format_p(chisq.test(dat_total[[var]], dat_total$strata_ordered)$p.value, d_pval)
         
         #Select which P-values to print
         if("descriptive" %in% p_types & "trend" %in% p_types) {

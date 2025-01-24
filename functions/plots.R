@@ -13,18 +13,32 @@ library(tidyverse) ; library(table1)
 library("paletteer") ; library("RColorBrewer")
 
 palettes <- list(NatComms= paletteer_d("ggsci::nrc_npg", n=10),
+                 
+                 NatMainAccent3=list(
+                   Level1=c("#691814", "#0A2256", "#66551C"),
+                   Level2=c("#8F2F24", "#00488D", "#957628"),
+                   Level3=c("#B64342", "#2E6CA9", "#C39D3F"),
+                   Level4=c("#DC6464", "#6494C9", "#E3C663"),
+                   Level5=c("#D79EA0", "#A2C6E2", "#E8D48C")),
+                 NatMainAccent_L2 = c("#8F2F24", "#00488D", "#957628"),
+                 
+                 NatMainBackground2=list(
+                   Level1=c("#1B2B43", "#5E5948"),
+                   Level2=c("#465267", "#888363"),
+                   Level3=c("#6D788D", "#A5A083"),
+                   Level4=c("#96A0B3", "#C5C1A5"),
+                   Level5=c("#C6CAD6", "#DFDCCC")),
+                 NatMainBackground2x2=c("#888363","#C5C1A5", "#96A0B3", "#435269"),
+                 
+                 #single color ramp palettes
                  greens5 = paletteer_dynamic("cartography::green.pal", 5),
                  greens = rev(paletteer_dynamic("cartography::green.pal", 10)),
                  oranges = rev(paletteer_dynamic("cartography::orange.pal", 10)),
                  blues = rev(paletteer_dynamic("cartography::blue.pal", 10)),
                  purples=rev(paletteer_dynamic("cartography::purple.pal", 10))[3:10],
-                 nature_main4=c("#888363","#C5C1A5", "#96A0B3", "#435269"),
+                 
+                 # Diverging palettes (heatmaps)
                  blured_bin = c("#5496CE", "#DC6464"),
-                 
-                 #Categorical/assigned 
-                 nature_basic=c("AVI/AVI"="#C5C1A5", "AVI/AAV"="grey80", "AVI/PAV"="#96A0B3", "PAV/PAV"="#435269", "AAV/PAV"="grey80"),
-                 
-                 # Diverging heatmaps
                  hm_palette_rwb = colorRampPalette(c("#00488D", "white", "#8F2F24"))(n=100),
                  hm_palette_gwp = colorRampPalette(c("#A64791", "white", "#429130"), space="rgb")(n=100),
                  hm_palette_gwp_custom = circlize::colorRamp2(c(-5, 0, 5), c("#A64791", "white", "#429130")),
@@ -33,7 +47,6 @@ palettes <- list(NatComms= paletteer_d("ggsci::nrc_npg", n=10),
                  #Binary codings
                  plaus_24hr=c("forestgreen", "grey38"), has_24hr=c("forestgreen", "grey38")
 )
-
 
 
 # ==============
