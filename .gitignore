@@ -1,0 +1,30 @@
+# Data and environment files
+data/*
+output/*
+cache/*
+opt/*
+env/*
+archive/*
+*.Rhistory
+
+# Results and documentation
+run/*
+output/*
+doc/*
+README.html
+
+# Microsoft Office files
+*.docx
+*.pptx
+*.rda
+
+# Documentation
+doc/*
+*.Rproj
+change_requests*
+
+# Mac-specific
+*.DS_Store
+Icon
+.Rproj.user
+
