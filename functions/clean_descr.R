@@ -116,6 +116,14 @@ median_25to75 <- function(x, d=2) {
 }
 
 
+# =====================================================
+## Print continuous vars as median [IQR]
+# =====================================================
+median_IQR <- function(x, d=2) {
+  sprintf("%s [%s]", round(median(x, na.rm=T), digits = d), 
+          round(IQR(x, na.rm=T),digits=d))
+}
+
 # ======================================
 ## Print range 
 # ======================================
@@ -130,6 +138,18 @@ range_formatted <-function(x, d=2) {
 # ======================================================
 format_p <- function(p, digits=3) {
   ifelse(p<0.01, format(p, scientific=T, digits=2), round(p, digits))
+}
+
+
+# ====================================================
+## Format P-values with stars for significance 
+# ====================================================
+
+format_p_star <- function(p, digits=3) { 
+  case_when(p>=0.05~paste0(format_p(p)), 
+            p<0.05 & p>=0.01~paste0(format_p(p), "*"), 
+            p<0.01 & p>=0.001~paste0(format_p(p), "**"), 
+            p<0.001~paste0(format_p(p), "***"))
 }
 
 
