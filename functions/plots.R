@@ -30,6 +30,12 @@ palettes <- list(NatComms= paletteer_d("ggsci::nrc_npg", n=10),
                    Level5=c("#C6CAD6", "#DFDCCC")),
                  NatMainBackground2x2=c("#888363","#C5C1A5", "#96A0B3", "#435269"),
                  
+                 NatExt=list(
+                   Oranges=c("#793011", "#A6501E", "#E96900", "#F29741", "#FBBD7D", "#EBD3B8"),
+                   Blues=c("#0A2256", "#1D4884", "#006EAE", "#5496CE", "#A5C9E6", "#C6DAE3"),
+                   Purples=c("#3D104B", "#672668", "#A64791", "#B778B4", "#CCABCC", "#E0D0E3"),
+                   Greens=c("#1A361A", "#356932","#429130", "#73B152", "#A9C981", "#C9D2B8")),
+                 
                  #single color ramp palettes
                  greens5 = paletteer_dynamic("cartography::green.pal", 5),
                  greens = rev(paletteer_dynamic("cartography::green.pal", 10)),
@@ -205,5 +211,27 @@ plot_categorical <- function(cat_var, data=analysis) {
     theme(plot.title = element_text(face="bold", size=8))
   #ggplot_theme_standard_categorical
 }
+
+
+
+# ==================================
+## Function to extend plot limits 
+# ==================================
+
+ggplot_extend_ylim <- function(plot, y_max_extend=0.1, y_min_extend=0) {
+  
+  # Get current ylimits
+  current_ylims <- ggplot_build(plot)$layout$panel_scales_y[[1]]$range$range
+  
+  # Calculate extension amount based on current plot max & y_max_extend
+  extended_ymax <- current_ylims[2] + (y_max_extend * current_ylims[2])
+  extended_ymin <- current_ylims[1] + (y_min_extend * current_ylims[1])
+  
+  # Update the plot with the extended upper limit
+  plot <- plot + expand_limits(y = c(extended_ymin, extended_ymax))
+  plot
+}
+
+
 
 ## END_OF_SCRIPT
