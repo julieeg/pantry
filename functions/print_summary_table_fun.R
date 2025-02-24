@@ -11,7 +11,8 @@ print_summary_table <- function(
     p_print=T, # If T, print P-values in summmary table; default = F
     p_types=c("descriptive", "trend"), # P-value types; descriptive(t.test-P/ANOVA-F for cont; X2-P for cat); trend(continuous exposure levels using lm)
     p_adjust="agesex", # P-value adjustments; default = c(agesex); otherwise, list variables for adjustment: c("age", "sex", gPC1", ...)
-    hide_bin_reference=T
+    hide_bin_reference=T,
+    p_smalln=F
     ) {
   
   ############################################################
@@ -63,6 +64,7 @@ print_summary_table <- function(
   #Pvalue adjustments
   if(p_adjust[1] == "agesex") { p_adjust_vars = c("age", "sex") } else {
     p_adjust_vars = p_adjust }
+  if(p_smalln==T) {cat("Using Fisher's Exact test for categorical comparisons\n")}
   
   #Strata var order, if different from variable coding (default = F)
   if(var_strata==F) { data <- data %>% 
@@ -121,10 +123,10 @@ print_summary_table <- function(
     var = names(vars_to_summarize)[v]
     if(p_adjust != "none") {vars_to_select <- c(var, p_adjust_vars)} else {vars_to_select <- var}
     
-    var.total.dat = dat_total %>% dplyr::select(strata_ordered, Var=all_of(vars_to_select)) %>%
-      filter(complete.cases(Var))
+    var.total.dat = dat_total %>% dplyr::select(strata_ordered, all_of(vars_to_select)) %>%
+      filter(complete.cases(var)) %>% rename(Var=var)
     var.grouped.dat = dat_grouped %>% dplyr::select(strata_ordered, Var=all_of(var)) %>%
-      filter(complete.cases(Var))
+      filter(complete.cases(var))
     var.Label=paste0(vars_to_summarize[v][[1]])
   
     # ==============================
@@ -158,8 +160,8 @@ print_summary_table <- function(
         if(nlevels(dat_total$strata_ordered) == 2 & p_adjust == "none") {
           P_test <- format_p(t.test(as.formula(P_formula), data=dat_total)$p.value, d_pval)
           P_trend = NA } else {
-            P_Ftest = format_p(anova(lm(formula(Pf_formula), data=dat_total))$'Pr(>F)'[1], d_pval)
-            P_trend = format_p(summary(lm(formula(Pf_formula), data=dat_total))$coef[2,4], d_pval)
+            P_test = format_p(anova(lm(formula(P_formula), data=dat_total))$'Pr(>F)'[1], d_pval)
+            P_trend = format_p(summary(lm(formula(P_formula), data=dat_total))$coef[2,4], d_pval)
           }
         
         # Select which P-values to print
@@ -199,12 +201,15 @@ print_summary_table <- function(
       ## Add P-values
       if(p_print == T) {
         p_to_print <- list()
-        P_ChiSq=format_p(chisq.test(dat_total[[var]], dat_total$strata_ordered)$p.value, d_pval)
+        if(p_smalln ==T) {
+          P_cat=format_p(fisher.test(dat_total[[var]], dat_total$strata_ordered)$p.value, d_pval)
+        } else {
+            P_cat=format_p(chisq.test(dat_total[[var]], dat_total$strata_ordered)$p.value, d_pval) }
         
         #Select which P-values to print
         if("descriptive" %in% p_types & "trend" %in% p_types) {
-          p_to_print <- cbind.data.frame(P_value=c(P_ChiSq, rep("", length(var_lvls))), P_trend=c("-", rep("", length(var_lvls))))
-        } else if(p_types == "descriptive" | p_types == "trend") { p_to_print <- data.frame(P_value=c(P_ChiSq, rep("", length(var_lvls)))) }
+          p_to_print <- cbind.data.frame(P_value=c(P_cat, rep("", length(var_lvls))), P_trend=c("-", rep("", length(var_lvls))))
+        } else if(p_types == "descriptive" | p_types == "trend") { p_to_print <- data.frame(P_value=c(P_cat, rep("", length(var_lvls)))) }
           
         #var.summary <- cbind.data.frame(var.summary, t(as.data.frame(P_to_print)))
         var.summary <- cbind.data.frame(var.summary, p_to_print)
