@@ -124,7 +124,7 @@ print_glm <- function(exposure, outcome, covariates=m, print_trend=F, label=F, d
 
 
 # ==============================================================================
-## Run linear regression (interaction effects) with pairwise & F-test P-values
+## Run linear regression with interaction with pairwise & F-test P-values
 # ==============================================================================
 
 print_lm_interaction <- function(exposure, interaction, outcome, 
@@ -147,7 +147,7 @@ print_lm_interaction <- function(exposure, interaction, outcome,
     out <- rbind(c(rep(NA, 4), mod.anova[(nrow(mod.anova)-1),4], mod.anova[(nrow(mod.anova)-1),5]), out)
     rownames(out)[1] <- label_interaction
     
-  } ; 
+  } 
   
   # If values should be rouded
   if(round == T) {
@@ -158,6 +158,56 @@ print_lm_interaction <- function(exposure, interaction, outcome,
   
   return(as.data.frame(out))
 }
+
+
+# =======================================================================
+## Run linear mixed-effects model 
+# =======================================================================
+
+run_lme <- function(exposure, outcome, covariates="age+sex+bmi+PC1z+PC2z+PC3z+time", outcome_label=F,
+                    coefficients_to_print=c("Genetic Category"="genetic_category.lab", "Time"="time"),
+                    round=F, digits=c(3,3), data_long = postprandial %>% filter(time %in% pp_vars[1:5])) {
+  
+  # Run lme for genotype main effects
+  lme_main=paste0(outcome, "~", exposure, "+", covariates, "+(1|id)")
+  lme_main_summary=summary(lmerTest::lmer(formula(lme_main), data=data_long))$coef %>% as.data.frame()
+  lme_main_anova=anova(lmerTest::lmer(formula(lme_main), data=data_long)) %>% as.data.frame()
+  
+  # Summarise selected coefficients
+  coefs_main <- lme_main_summary %>% filter(grepl(paste0("^(", paste(coefficients_to_print, collapse = "|"), ")"), rownames(.)))
+  coefs_anova <- lme_main_anova %>% filter(grepl(paste0("^(", paste(coefficients_to_print, collapse = "|"), ")"), rownames(.))) 
+  rownames(coefs_anova) <- paste0(rownames(coefs_anova), "(joint)")    
+  
+  lme_summary <- as.data.frame(matrix(NA,nrow(coefs_main)+nrow(coefs_anova), 5, dimnames = list(
+    c(rownames(coefs_main), rownames(coefs_anova)), c("beta", "se", "p", "anovaF", "anovaP"))))
+  
+  lme_summary[1:nrow(coefs_main),1:3] <- coefs_main[,c(1:2,5)] 
+  lme_summary[(1+nrow(coefs_main)):nrow(lme_summary),4:5] <- coefs_anova[,5:6]
+  
+  # Format summary table
+  lme_summary <- lme_summary %>% as.data.frame() %>%
+    mutate(Effect=ifelse(grepl(":", rownames(.)), "Interaction", "Main")) %>%
+    mutate(lowCI=beta-1.96*se, upCI=beta+1.96*se) %>%
+    mutate(Outcome=ifelse(outcome_label==F, outcome, outcome_label)) %>%
+    
+    mutate(Beta.SE=sprintf("%s (%s, %s)", round(beta,2), round(lowCI,2), round(upCI,2)), P=format_p(p)) %>%
+    mutate(P_signif = format_p_star(p), anovaP_signif=format_p_star(anovaP))
+  
+  # Add descriptive coefficient labels
+  if(is.null(names(coefficients_to_print))) {coefficients_labels <- coefficients_to_print } else {
+    coefficients_labels <- names(coefficients_to_print) }
+  for(i in 1:length(coefficients_to_print)){
+    rownames(lme_summary) <- gsub(":"," x ",gsub(coefficients_to_print[i], paste0(coefficients_labels[i], "_"), rownames(lme_summary)))
+  } ; lme_summary <- lme_summary %>% mutate(Exposure=rownames(.), .before=beta)
+  rownames(lme_summary) <- NULL
+  
+  lme_summary
+
+}
+
+
+
+
 
 
 
