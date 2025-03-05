@@ -33,6 +33,7 @@ palettes <- list(NatComms= paletteer_d("ggsci::nrc_npg", n=10),
                  NatExt=list(
                    Oranges=c("#793011", "#A6501E", "#E96900", "#F29741", "#FBBD7D", "#EBD3B8"),
                    Blues=c("#0A2256", "#1D4884", "#006EAE", "#5496CE", "#A5C9E6", "#C6DAE3"),
+                   Reds=c("#691814", "#852C22", "#C6373C", "#DC6464", "#E9A0A5", "#DFC1BD"),
                    Purples=c("#3D104B", "#672668", "#A64791", "#B778B4", "#CCABCC", "#E0D0E3"),
                    Greens=c("#1A361A", "#356932","#429130", "#73B152", "#A9C981", "#C9D2B8")),
                  
