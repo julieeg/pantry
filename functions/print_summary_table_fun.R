@@ -8,11 +8,13 @@ print_summary_table <- function(
     var_strata_order=F, # F = based on variable coding in data
     factor_vars=F,
     digits=c(2,1,4), # d_cont; d_pct; d_pval
+    hide_bin_reference=T,
     p_print=T, # If T, print P-values in summmary table; default = F
     p_types=c("descriptive", "trend"), # P-value types; descriptive(t.test-P/ANOVA-F for cont; X2-P for cat); trend(continuous exposure levels using lm)
     p_adjust="agesex", # P-value adjustments; default = c(agesex); otherwise, list variables for adjustment: c("age", "sex", gPC1", ...)
-    hide_bin_reference=T,
-    p_smalln=F
+    p_smalln=F,
+    p_numeric_strata=F,
+    print_cont_fun = "mean_sd"
     ) {
   
   ############################################################
@@ -20,11 +22,22 @@ print_summary_table <- function(
   ############################################################
   
   # ======================================
-  ## For continuous vars: mean_sd
+  ## For continuous vars: mean_sd & median_25to75
   # ======================================
   mean_sd<-function(x, d=2) {
     sprintf("%s \u00B1 %s", round(mean(x, na.rm=T), digits = d), 
             round(sd(x, na.rm=T), digits = d))
+  }
+  
+  median_25to75<-function(x, d=2) {
+    qs<-round(quantile(x, breaks=seq(0,1,0.25), na.rm=T), d)
+    sprintf("%s [%s, %s]", round(median(x, na.rm=T), digits = d), 
+            qs[[2]], qs[[4]])
+  }
+  
+  median_5to95<-function(x, d=2) {
+    qs<-round(quantile(x, c(0.05, 0.5, 0.95), na.rm=T), d)
+    sprintf("%s (%s, %s)", qs[[2]], qs[[1]], qs[[3]])
   }
   
   
@@ -108,9 +121,6 @@ print_summary_table <- function(
   #Save strata level labels for table
   strata_var_lvls <- levels(dat_grouped$strata_ordered)
   
-  footnotes <- list()
-  
-  
   
   #####################################################
   ##   Summarize each variable, grouping by STRATA   ##
@@ -134,11 +144,18 @@ print_summary_table <- function(
     # ==============================
     
     if(is.numeric(var.total.dat$Var) == T) {
-      var.summary <- cbind.data.frame(
-        var.total.dat %>% reframe(Var=mean_sd(Var, d=d_cont)) %>% 
-        t() %>% as.data.frame(), 
-        (var.grouped.dat %>% reframe(Var=mean_sd(Var, d=d_cont)) %>% 
-        t() %>% as.data.frame())[-1,]) 
+      if(startsWith(print_cont_fun, "median")==T) {
+        var.summary <- cbind.data.frame(
+          var.total.dat %>% reframe(Var=median_25to75(Var, d=d_cont)) %>% 
+          t() %>% as.data.frame(), 
+          (var.grouped.dat %>% reframe(Var=median_25to75(Var, d=d_cont)) %>% 
+          t() %>% as.data.frame())[-1,]) } else {
+            var.summary <- cbind.data.frame(
+              var.total.dat %>% reframe(Var=mean_sd(Var, d=d_cont)) %>% 
+                t() %>% as.data.frame(), 
+              (var.grouped.dat %>% reframe(Var=mean_sd(Var, d=d_cont)) %>% 
+                 t() %>% as.data.frame())[-1,])
+          }
       
       # Reformatting
       colnames(var.summary) <- c("Total", var_strata_order)
@@ -150,10 +167,10 @@ print_summary_table <- function(
         
         # Set p-value formula
         if(p_adjust == "none") { # for UNADJUSTED p-values
-          P_formula <- paste0(var, "~strata_ordered") ; Ptrend_formula <- paste0(var, "~strata_ordere.cont") } else 
+          P_formula <- paste0(var, "~strata_ordered") ; Ptrend_formula <- paste0(var, "~as.numeric(strata_ordered.cont)") } else 
             if(p_adjust != "none") {
               P_formula <- paste0(var, "~strata_ordered", "+", gsub(var, "", paste0(p_adjust_vars, collapse = "+")))
-              Ptrend_formula <- paste0(var, "~strata_ordered.cont", "+", gsub(var, "", paste0(p_adjust_vars, collapse = "+")))
+              Ptrend_formula <- paste0(var, "~as.numeric(strata_ordered.cont)", "+", gsub(var, "", paste0(p_adjust_vars, collapse = "+")))
         }
         
         # Calculate P-values
@@ -161,7 +178,7 @@ print_summary_table <- function(
           P_test <- format_p(t.test(as.formula(P_formula), data=dat_total)$p.value, d_pval)
           P_trend = NA } else {
             P_test = format_p(anova(lm(formula(P_formula), data=dat_total))$'Pr(>F)'[1], d_pval)
-            P_trend = format_p(summary(lm(formula(P_formula), data=dat_total))$coef[2,4], d_pval)
+            P_trend = format_p(summary(lm(formula(Ptrend_formula), data=dat_total))$coef[2,4], d_pval)
           }
         
         # Select which P-values to print
@@ -185,10 +202,10 @@ print_summary_table <- function(
         } ;  var.summary <- cbind.data.frame(rbind(
         NA, do.call(rbind.data.frame, lapply(var_lvls, function(lvl) {
           var.total.dat %>% 
-            reframe(Total.Var=n_pct(Var, level=lvl, d=d_pct)) 
+            reframe(Total.Var=n_pct(Var, level=paste(lvl), d=d_pct)) 
           }) )),
         lapply(var_lvls, function(lvl) {
-          var.grouped.dat %>% reframe(Var=n_pct(Var, level=lvl, d=d_pct)) 
+          var.grouped.dat %>% reframe(Var=n_pct(Var, level=paste(lvl), d=d_pct)) 
           }) %>% reduce(left_join, by = "strata_ordered") %>% 
           t() %>% as.data.frame() 
         ) 
