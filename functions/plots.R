@@ -195,10 +195,10 @@ ggplot_theme_standard_categorical <- theme_bw() + theme(
 ## basic descriptive plots 
 # ==========================
 
-plot_continuous <- function(cont_var, data=analysis) {
+plot_continuous <- function(cont_var, data=analysis, ...) {
   data %>% select(var=all_of(cont_var)) %>% filter(!is.na(var)) %>%
-    ggplot(aes(x=var)) + geom_histogram(bins=30) +
-    labs(title=cont_var, x=cont_var, y="frequency") + 
+    ggplot(aes(x=var)) + geom_histogram(bins=30, ...) +
+    labs(title=cont_var, x=cont_var, y="Frequency") + 
     theme(plot.title = element_text(face="bold", size=8)) #+
   #ggplot_theme_standard_continuous
 }
