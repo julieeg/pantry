@@ -136,6 +136,7 @@ range_formatted <-function(x, d=2) {
 # ======================================================
 ## Print P-values as rounded or scientific (if <0.01)
 # ======================================================
+library(scales)
 format_p <- function(p, digits=3) {
   ifelse(p<0.01, format(p, scientific=T, digits=2), round(p, digits))
 }
