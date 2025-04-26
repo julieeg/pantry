@@ -128,11 +128,15 @@ print_glm <- function(exposure, outcome, covariates=m, print_trend=F, label=F, d
 # ==============================================================================
 
 print_lm_interaction <- function(exposure, interaction, outcome, 
-                                 model=m, label_model, label_interaction, print_interaction_term, 
+                                 model=m, label_model=F, label_interaction=F, print_interaction_term=T, 
                                  lm_trend=T, round=T, digits=c(3,6), data) {
   
-  mod <- lm(formula(paste0(outcome, "~", exposure, "*", interaction, "+", model)), data)
-  mod.anova <- anova(mod)
+  mod.main <- lm(formula(paste0(outcome, "~", exposure, "+", interaction, "+", model)), data)
+  mod.anova <- anova(mod.main)
+  
+  mod.int <- lm(formula(paste0(outcome, "~", exposure, "*", interaction, "+", model)), data)
+  mod.int.anova <- anova(mod.int)
+  
   if(label_model==F) {model_label <- outcome} ; if(label_interaction==F) {
     label_interaction <- paste0(exposure, "x", outcome) }
   
@@ -147,8 +151,15 @@ print_lm_interaction <- function(exposure, interaction, outcome,
     out <- rbind(c(rep(NA, 4), mod.anova[(nrow(mod.anova)-1),4], mod.anova[(nrow(mod.anova)-1),5]), out)
     rownames(out)[1] <- label_interaction
     
-  } 
-  
+  } else {
+    out<-matrix(NA, 1, 6, dimnames = list(c(exposure, interaction), c("n", "beta_main", "se_main", "p_main", "f_p_main", "beta_int", "se_int", "p_int", "f_p_main")))
+    out[1,c(2:4)] <- summary(mod)$coef[2:nExp, c(1:2,4)] ; out[1,5:6] <- c(anova(mod)[1,4], anova(mod)[1,5])
+    out[(nExp+2):(nExp+nInt),c(2:4)] <- summary(mod)$coef[3:(3+nInt-2), c(1:2,4)] ; out[(nExp+1),5:6] <- c(mod.anova[2,4], mod.anova[2,5])
+    out[,1] <- c(as.vector(table(mod$model[[exposure]])), as.vector(table(mod$model[[interaction]])))
+    
+    out <- rbind(c(rep(NA, 4), mod.anova[(nrow(mod.anova)-1),4], mod.anova[(nrow(mod.anova)-1),5]), out)
+    rownames(out)[1] <- label_interaction
+
   # If values should be rouded
   if(round == T) {
     out <- data.frame(out) %>%
@@ -157,6 +168,8 @@ print_lm_interaction <- function(exposure, interaction, outcome,
   }
   
   return(as.data.frame(out))
+  }
+  
 }
 
 
