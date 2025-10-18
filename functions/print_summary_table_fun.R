@@ -89,7 +89,7 @@ print_summary_table <- function(
   
   #Make dataframe with strata_var (no missing; ordered by var_strata_order) & vars_to_summarise & p-adjust vars
   #If P-values should be adjusted {
-  if(p_adjust != "none") {
+  if(p_adjust[1] != "none") {
     dat_total <- data %>% 
       select(strata=all_of(var_strata), all_of(names(vars_to_summarize)),
       all_of(p_adjust_vars)) %>%
@@ -131,7 +131,7 @@ print_summary_table <- function(
     
     ## Make temporary vars for name, data, and Label
     var = names(vars_to_summarize)[v]
-    if(p_adjust != "none") {vars_to_select <- c(var, p_adjust_vars)} else {vars_to_select <- var}
+    if(p_adjust[1] != "none") {vars_to_select <- c(var, p_adjust_vars)} else {vars_to_select <- var}
     
     var.total.dat = dat_total %>% dplyr::select(strata_ordered, all_of(vars_to_select)) %>%
       filter(complete.cases(var)) %>% rename(Var=var)
@@ -166,15 +166,15 @@ print_summary_table <- function(
         p_to_print <- list()
         
         # Set p-value formula
-        if(p_adjust == "none") { # for UNADJUSTED p-values
+        if(p_adjust[1] == "none") { # for UNADJUSTED p-values
           P_formula <- paste0(var, "~strata_ordered") ; Ptrend_formula <- paste0(var, "~as.numeric(strata_ordered.cont)") } else 
-            if(p_adjust != "none") {
+            if(p_adjust[1] != "none") {
               P_formula <- paste0(var, "~strata_ordered", "+", gsub(var, "", paste0(p_adjust_vars, collapse = "+")))
               Ptrend_formula <- paste0(var, "~as.numeric(strata_ordered.cont)", "+", gsub(var, "", paste0(p_adjust_vars, collapse = "+")))
         }
         
         # Calculate P-values
-        if(nlevels(dat_total$strata_ordered) == 2 & p_adjust == "none") {
+        if(nlevels(dat_total$strata_ordered) == 2 & p_adjust[1] == "none") {
           P_test <- format_p(t.test(as.formula(P_formula), data=dat_total)$p.value, d_pval)
           P_trend = NA } else {
             P_test = format_p(anova(lm(formula(P_formula), data=dat_total))$'Pr(>F)'[1], d_pval)

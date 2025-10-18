@@ -12,11 +12,11 @@ library(tidyverse) ; library(table1)
 ## Tabulate estimated marginal means
 # ==============================================
 
-get_emm.fun <- function(exposure, outcome, covars, reference, label=F, label.outcome=F, data=analysis) {
+get_emm.fun <- function(exposure, outcome, covars, reference, label=F, label.outcome=F, data=analysis, set.rg.limit=180000) {
   exp.dat <- data %>% dplyr::select(exp=exposure)
   dat <- data %>% mutate(exp=exp.dat$exp) ; dat$exp <- relevel(as.factor(dat$exp), ref=reference)
   mod <- lm(formula(paste0(outcome, "~", "exp", "+", covars)), dat)
-  emm <- as.data.frame(emmeans(mod, ~ exp, rg.limit=180000)) %>% mutate(outcome=outcome, .after=exp) %>% 
+  emm <- as.data.frame(emmeans(mod, ~ exp, rg.limit=set.rg.limit)) %>% mutate(outcome=outcome, .after=exp) %>% 
     mutate(n = as.vector(table(mod$model$exp)), .before=emmean)
   anv <- anova(mod) #$'Pr(>F)'[1]
   
@@ -177,9 +177,9 @@ print_lm_interaction <- function(exposure, interaction, outcome,
 ## Run linear mixed-effects model 
 # =======================================================================
 
-run_lme <- function(exposure, outcome, covariates="age+sex+bmi+PC1z+PC2z+PC3z+time", outcome_label=F,
-                    coefficients_to_print=c("Genetic Category"="genetic_category.lab", "Time"="time"),
-                    round=F, digits=c(3,3), data_long = postprandial %>% filter(time %in% pp_vars[1:5])) {
+run_lme <- function(exposure, outcome, covariates, outcome_label=F,
+                    coefficients_to_print=c("Genotype"="genotype", "Time"="time"),
+                    round=F, digits=c(3,3), data_long) {
   
   # Run lme for genotype main effects
   lme_main=paste0(outcome, "~", exposure, "+", covariates, "+(1|id)")
@@ -203,8 +203,8 @@ run_lme <- function(exposure, outcome, covariates="age+sex+bmi+PC1z+PC2z+PC3z+ti
     mutate(lowCI=beta-1.96*se, upCI=beta+1.96*se) %>%
     mutate(Outcome=ifelse(outcome_label==F, outcome, outcome_label)) %>%
     
-    mutate(Beta.SE=sprintf("%s (%s, %s)", round(beta,2), round(lowCI,2), round(upCI,2)), P=format_p(p)) %>%
-    mutate(P_signif = format_p_star(p), anovaP_signif=format_p_star(anovaP))
+    mutate(Beta.SE=sprintf("%s (%s, %s)", round(beta,digits[1]), round(lowCI,digits[1]), round(upCI,digits[1])), P=format_p(p, digits[2])) %>%
+    mutate(P_signif = format_p_star(p, digits[2]), anovaP_signif=format_p_star(anovaP, digits[2]))
   
   # Add descriptive coefficient labels
   if(is.null(names(coefficients_to_print))) {coefficients_labels <- coefficients_to_print } else {
@@ -217,8 +217,6 @@ run_lme <- function(exposure, outcome, covariates="age+sex+bmi+PC1z+PC2z+PC3z+ti
   lme_summary
 
 }
-
-
 
 
 
