@@ -1,5 +1,6 @@
 # load required packages
 library(tidyverse) ; library(table1)
+library(paletteer)
 
 
 
@@ -31,12 +32,17 @@ palettes <- list(NatComms= paletteer_d("ggsci::nrc_npg", n=10),
                  NatMainBackground2x2=c("#888363","#C5C1A5", "#96A0B3", "#435269"),
                  
                  NatExt=list(
-                   Oranges=c("#793011", "#A6501E", "#E96900", "#F29741", "#FBBD7D", "#EBD3B8"),
+                   Olives=c("#304115", "#647314", "#96A008", "#C5C53F", "#DCDC76", "#F1EEB9"),
+                   Greens=c("#1A361A", "#356932","#429130", "#73B152", "#A9C981", "#C9D2B8"),
+                   Teals=c("#133546", "#275E72", "#0096A0", "#6ABABB", "#96CED4", "#B9CCD4"),
                    Blues=c("#0A2256", "#1D4884", "#006EAE", "#5496CE", "#A5C9E6", "#C6DAE3"),
-                   Reds=c("#691814", "#852C22", "#C6373C", "#DC6464", "#E9A0A5", "#DFC1BD"),
                    Purples=c("#3D104B", "#672668", "#A64791", "#B778B4", "#CCABCC", "#E0D0E3"),
-                   Greens=c("#1A361A", "#356932","#429130", "#73B152", "#A9C981", "#C9D2B8")),
-                 
+                   Reds=c("#691814", "#852C22", "#C6373C", "#DC6464", "#E9A0A5", "#DFC1BD"),
+                   Oranges=c("#793011", "#A6501E", "#E96900", "#F29741", "#FBBD7D", "#EBD3B8"),
+                   Yellows=c("#66551C", "#886C25", "#CB9B23", "#E3C663", "#F7DC87", "#F7EBC2"),
+                   Browns = c("#3F2B1A", "#744F3D", "#8B6B55", "#BC9778", "#DDBCA1", "#F1E4D3")),
+                   
+                
                  #single color ramp palettes
                  greens5 = paletteer_dynamic("cartography::green.pal", 5),
                  greens = rev(paletteer_dynamic("cartography::green.pal", 10)),
