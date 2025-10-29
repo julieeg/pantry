@@ -31,6 +31,10 @@ palettes <- list(NatComms= paletteer_d("ggsci::nrc_npg", n=10),
                    Level5=c("#C6CAD6", "#DFDCCC")),
                  NatMainBackground2x2=c("#888363","#C5C1A5", "#96A0B3", "#435269"),
                  
+                 NatMainBackground = list(
+                   Tones = c("#575443","#7C785E", "#9D997E", "#BEBA9E", "#DFDBC9", "#F6F3ED"),
+                   Greys = c("#202C3E", "#414C62", "#677084", "#9099AA", "#C2C7D4","#E2E2EA")),
+                   
                  NatExt=list(
                    Olives=c("#304115", "#647314", "#96A008", "#C5C53F", "#DCDC76", "#F1EEB9"),
                    Greens=c("#1A361A", "#356932","#429130", "#73B152", "#A9C981", "#C9D2B8"),
