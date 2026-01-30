@@ -87,7 +87,7 @@ print_glm <- function(exposure, outcome, covariates=m, print_trend=F, label=F, d
   mod.anv <- anova(mod)
   
   # For categorical exposure variable 
-  if(is.numeric(data[, ..exposure][[1]]) == F) {
+  if(is.numeric(data %>% pull(exposure)) == F) {
     nX <- length(mod$xlevels[[exposure]])
     out<-matrix(NA, nX, 6, dimnames = list(paste0(label, "_", mod$xlevels[[exposure]]), c("n", "beta", "se", "p", "f", "f_p")))
     out[2:nrow(out),c(2:4)] <- summary(mod)$coef[2:nX, c(1:2,4)] ; out[1,5] <- mod.anv[exposure,4] ; out[1,6] <- mod.anv[exposure,5]
@@ -100,7 +100,7 @@ print_glm <- function(exposure, outcome, covariates=m, print_trend=F, label=F, d
   } 
   
   # For continuous exposure variable
-  if(is.numeric(data[, ..exposure][[1]]) == T) {
+  if(is.numeric(data %>% pull(exposure)) == T) {
     out<-matrix(NA, 1, 6, dimnames = list(exposure, c("n", "beta", "se", "p", "f", "f_p")))
     out[2:4] <- summary(mod)$coef[2,c(1:2,4)]
     out[,1] <- length(mod$fitted.values) ; out[, 5] <- mod.anv[exposure, 4] ; out[, 6] <- mod.anv[exposure, 5]

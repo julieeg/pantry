@@ -102,7 +102,7 @@ n_pct <- function(x, level=F, d=1) {
   if(level==F) {
     sapply(as.list(names(table(x))), function(lvl) {
       paste0(lvl, ", ", sum(x == lvl, na.rm=T), " (", round(sum(x == lvl, na.rm=T)/n()*100, d), "%)") }) } 
-  else{paste0(sum(x == level, na.rm=T), " (", round(sum(x == level, na.rm=T)/n()*100, d), "%)")}
+  else{paste0(sum(x == level, na.rm=T), " (", round(sum(x == level, na.rm=T)/n()*100, d), ")")}
 }
 
 
