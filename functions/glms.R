@@ -84,7 +84,7 @@ print_lm <- function(exposure, outcome, covariates=m, label,
 print_glm <- function(exposure, outcome, covariates=m, print_trend=F, label=F, data=analysis, exp=T) {
   
   mod <- glm(formula(paste0(outcome, "~", exposure, "+", covariates)), family=binomial("logit"), data) 
-  mod.anv <- anova(mod)
+  mod.anv <- anova(mod, test = "LRT")
   
   # For categorical exposure variable 
   if(is.numeric(data %>% pull(exposure)) == F) {
@@ -103,7 +103,7 @@ print_glm <- function(exposure, outcome, covariates=m, print_trend=F, label=F, d
   if(is.numeric(data %>% pull(exposure)) == T) {
     out<-matrix(NA, 1, 6, dimnames = list(exposure, c("n", "beta", "se", "p", "f", "f_p")))
     out[2:4] <- summary(mod)$coef[2,c(1:2,4)]
-    out[,1] <- length(mod$fitted.values) ; out[, 5] <- mod.anv[exposure, 4] ; out[, 6] <- mod.anv[exposure, 5]
+    out[,1] <- length(mod$fitted.values) ; out[, 5] <- NA ; out[, 6] <- NA
     out <- as.data.frame(out) %>% mutate(across(c("beta", "se", "p"), ~as.numeric(.)))
   }
   
@@ -116,11 +116,12 @@ print_glm <- function(exposure, outcome, covariates=m, print_trend=F, label=F, d
   }
   
   #Add model label 
+  out <- out %>% mutate(exposure=exposure, level = gsub(".*[_]", "", rownames(.)), outcome=outcome, .before=n)
   if(label != F) {out <- out %>% mutate(label=label, .before=n)}
-  out <- out %>% mutate(exposure = gsub(".*[_]", "", rownames(.)), outcome=outcome, .after="label")
   return(as.data.frame(out))
   
 }
+
 
 
 # ==============================================================================
